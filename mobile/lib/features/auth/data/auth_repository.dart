@@ -31,6 +31,5 @@ class FakeAuthRepository implements AuthRepository {
 }
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  // Diganti ApiAuthRepository di Langkah 8.
   return FakeAuthRepository();
 });

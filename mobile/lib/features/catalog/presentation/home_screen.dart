@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/widgets/app_nav_bar.dart';
 import '../../../core/widgets/async_view.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/catalog_providers.dart';
@@ -25,17 +26,7 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: 0,
-        onDestinationSelected: (i) {
-          // Pesanan dan Profil ditambahkan di langkah berikutnya
-        },
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Beranda'),
-          NavigationDestination(icon: Icon(Icons.receipt_long_outlined), label: 'Pesanan'),
-          NavigationDestination(icon: Icon(Icons.person_outline), label: 'Profil'),
-        ],
-      ),
+      bottomNavigationBar: const AppNavBar(selected: 0),
       body: AsyncView(
         value: cats,
         isEmpty: (l) => l.isEmpty,

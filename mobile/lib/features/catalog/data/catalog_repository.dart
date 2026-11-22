@@ -52,7 +52,6 @@ class FakeCatalogRepository implements CatalogRepository {
   }
 }
 
-// Diisi di Langkah 8.
 class ApiCatalogRepository implements CatalogRepository {
   @override
   Future<List<Category>> categories() => throw UnimplementedError();

@@ -12,8 +12,6 @@ class AppColors {
   static const warning = Color(0xFFF59E0A);
 }
 
-// Dirakit manual karena GoogleFonts.interTextTheme() mengembalikan TextTheme
-// yang tidak cocok dengan ThemeData di Flutter terbaru (flutter/flutter#191067).
 TextTheme _interTextTheme() {
   final base = ThemeData.light().textTheme.apply(
     bodyColor: AppColors.text,
