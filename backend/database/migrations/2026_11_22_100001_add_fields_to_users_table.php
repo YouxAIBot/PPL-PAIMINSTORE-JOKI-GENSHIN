@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->string('avatar_url')->nullable();
             $table->enum('role', ['user', 'booster', 'admin'])->default('user');
-            $table->enum('status', ['active', 'suspended'])->default('active');
+            $table->enum('status', ['active', 'banned'])->default('active');
             $table->boolean('show_on_leaderboard')->default(true);
         });
     }

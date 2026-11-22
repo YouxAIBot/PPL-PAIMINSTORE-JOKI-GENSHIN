@@ -25,6 +25,7 @@ class DemoDataSeeder extends Seeder
         );
 
         $booster = User::where('email', 'booster1@paiminstore.test')->first();
+        $admin = User::where('role', 'admin')->orderBy('id')->first();
 
         foreach ([
             'Daily Login' => 'Paket login harian, resin, dan reward event.',
@@ -53,7 +54,7 @@ class DemoDataSeeder extends Seeder
 
         $orderNo = now()->format('Ymd').'001';
 
-        $make = function (string $status, ?User $assigned, int $idx) use ($customer, $packages, &$orderNo, $booster) {
+        $make = function (string $status, ?User $assigned, int $idx) use ($customer, $packages, &$orderNo, $booster, $admin) {
             $package = $packages[$idx % $packages->count()];
 
             $order = Order::create([
@@ -81,7 +82,7 @@ class DemoDataSeeder extends Seeder
                     Order::CANCELLED => Payment::FAILED,
                     default => Payment::PAID,
                 },
-                'verified_by' => $status === Order::PENDING_PAYMENT ? null : 1,
+                'verified_by' => $status === Order::PENDING_PAYMENT ? null : $admin?->id,
                 'paid_at' => $order->paid_at,
             ]);
 
@@ -100,7 +101,7 @@ class DemoDataSeeder extends Seeder
             'order_id' => $done->id,
             'uid' => '801234567',
             'server' => 'asia',
-            'credential_encrypted' => encrypt('player-login@example.com / P@ssw0rd!'),
+            'credential_encrypted' => ['username' => 'player-login@example.com', 'password' => 'P@ssw0rd!'],
             'attachment_url' => null,
             'purge_at' => now()->addDays(7),
         ]);

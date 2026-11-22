@@ -5,9 +5,11 @@ namespace Tests\Feature;
 use App\Models\JokiCategory;
 use App\Models\JokiPackage;
 use App\Models\Order;
+use App\Models\OrderGameAccount;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class AdminPanelTest extends TestCase
@@ -211,7 +213,8 @@ class AdminPanelTest extends TestCase
             'package_id' => $package->id,
             'uid' => '123456789',
             'server' => 'asia',
-            'credential' => 'rahasia-pelanggan',
+            'credential_username' => 'pelanggan@game.test',
+            'credential_password' => 'rahasia-pelanggan',
             'status' => Order::QUEUED,
             'queue_priority' => 5,
         ])->assertRedirect();
@@ -254,5 +257,73 @@ class AdminPanelTest extends TestCase
         $this->actingAs($admin)->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('Daftar Antrian Aktif');
+    }
+
+    public function test_manual_order_credential_is_stored_with_vault(): void
+    {
+        $admin = $this->makeAdmin();
+        $customer = User::create([
+            'name' => 'Pelanggan Vault', 'email' => 'vault@test.dev', 'password' => 'secret123', 'role' => 'user',
+        ]);
+        $category = JokiCategory::create(['name' => 'Quest', 'slug' => 'quest']);
+        $package = JokiPackage::create([
+            'category_id' => $category->id, 'name' => 'Paket Quest', 'price' => 50000, 'estimated_hours' => 4,
+        ]);
+
+        $this->actingAs($admin)->post(route('admin.orders.store'), [
+            'user_id' => $customer->id,
+            'package_id' => $package->id,
+            'uid' => '800000001',
+            'server' => 'asia',
+            'credential_username' => 'akun@game.test',
+            'credential_password' => 'pw-rahasia',
+            'status' => Order::PENDING_PAYMENT,
+        ])->assertRedirect();
+
+        $order = Order::where('user_id', $customer->id)->firstOrFail();
+        $raw = DB::table('order_game_accounts')->where('order_id', $order->id)->value('credential_encrypted');
+
+        $this->assertStringStartsWith('v1:', $raw);
+        $this->assertStringNotContainsString('pw-rahasia', $raw);
+        $this->assertSame(
+            ['username' => 'akun@game.test', 'password' => 'pw-rahasia'],
+            OrderGameAccount::find($order->id)->credential_encrypted,
+        );
+
+        $this->actingAs($admin)->post(route('admin.orders.credentials', $order))
+            ->assertOk()->assertSee('akun@game.test')->assertSee('pw-rahasia');
+    }
+
+    public function test_cannot_cancel_completed_order(): void
+    {
+        $admin = $this->makeAdmin();
+        [$order] = $this->makeOrder(Order::COMPLETED);
+
+        $this->actingAs($admin)->post(route('admin.orders.cancel', $order), ['reason' => 'iseng'])
+            ->assertRedirect()->assertSessionHasErrors('status');
+        $this->assertSame(Order::COMPLETED, $order->refresh()->status);
+    }
+
+    public function test_status_dropdown_cancel_does_not_redirect_to_post_route(): void
+    {
+        $admin = $this->makeAdmin();
+        [$order] = $this->makeOrder(Order::QUEUED);
+
+        $this->actingAs($admin)->from(route('admin.orders.show', $order))
+            ->post(route('admin.orders.status', $order), ['status' => Order::CANCELLED])
+            ->assertRedirect(route('admin.orders.show', $order))
+            ->assertSessionHasErrors('status');
+        $this->assertSame(Order::QUEUED, $order->refresh()->status);
+    }
+
+    public function test_ban_sets_status_banned(): void
+    {
+        $admin = $this->makeAdmin();
+        $target = User::create([
+            'name' => 'Nakal', 'email' => 'nakal@test.dev', 'password' => 'secret123', 'role' => 'user',
+        ]);
+
+        $this->actingAs($admin)->post(route('admin.users.ban', $target))->assertRedirect();
+        $this->assertSame('banned', $target->refresh()->status);
     }
 }

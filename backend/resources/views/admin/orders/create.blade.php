@@ -49,8 +49,16 @@
             </div>
         </div>
 
-        <label>Kredensial Akun Game</label>
-        <textarea name="credential" rows="3" required placeholder="Email / UID / password pelanggan">{{ old('credential') }}</textarea>
+        <div class="row">
+            <div>
+                <label>Username / Email Akun Game</label>
+                <input type="text" name="credential_username" required maxlength="255" autocomplete="off" value="{{ old('credential_username') }}">
+            </div>
+            <div>
+                <label>Password Akun Game</label>
+                <input type="password" name="credential_password" required maxlength="255" autocomplete="new-password">
+            </div>
+        </div>
 
         <div class="row">
             <div>

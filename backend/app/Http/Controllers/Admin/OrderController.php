@@ -50,7 +50,8 @@ class OrderController extends Controller
             'booster_id' => ['nullable', 'exists:users,id'],
             'uid' => ['required', 'string', 'max:100'],
             'server' => ['required', 'in:asia,europe,america,twhkmo'],
-            'credential' => ['required', 'string', 'max:1000'],
+            'credential_username' => ['required', 'string', 'max:255'],
+            'credential_password' => ['required', 'string', 'max:255'],
             'status' => ['required', 'in:pending_payment,queued'],
             'queue_priority' => ['nullable', 'integer', 'min:-999', 'max:999'],
             'customer_notes' => ['nullable', 'string', 'max:1000'],
@@ -97,7 +98,10 @@ class OrderController extends Controller
                 'order_id' => $order->id,
                 'uid' => $data['uid'],
                 'server' => $data['server'],
-                'credential_encrypted' => $data['credential'],
+                'credential_encrypted' => [
+                    'username' => $data['credential_username'],
+                    'password' => $data['credential_password'],
+                ],
             ]);
 
             Payment::create([
@@ -142,7 +146,7 @@ class OrderController extends Controller
         $target = $data['status'];
 
         if ($target === Order::CANCELLED) {
-            return redirect()->route('admin.orders.cancel', $order)->withInput();
+            return back()->withErrors(['status' => 'Gunakan form "Batalkan Order" (wajib isi alasan) untuk membatalkan.']);
         }
 
         $allowed = [
@@ -181,6 +185,10 @@ class OrderController extends Controller
     public function cancel(Request $request, Order $order)
     {
         $data = $request->validate(['reason' => ['required', 'string', 'max:500']]);
+
+        if (! $order->isCancellable()) {
+            return back()->withErrors(['status' => "Order berstatus {$order->status} tidak bisa dibatalkan."]);
+        }
 
         $previous = $order->status;
 
@@ -257,6 +265,9 @@ class OrderController extends Controller
 
         ActivityLog::record($user, 'game_account.accessed', $order->gameAccount);
 
-        return view('admin.orders.credentials', ['order' => $order]);
+        return view('admin.orders.credentials', [
+            'order' => $order,
+            'credential' => $order->gameAccount->credential_encrypted,
+        ]);
     }
 }

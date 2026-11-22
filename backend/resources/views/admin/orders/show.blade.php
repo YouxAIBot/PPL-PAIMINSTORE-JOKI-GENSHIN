@@ -89,7 +89,7 @@
     </div>
     @endif
 
-    @if (! in_array($order->status, ['completed', 'cancelled'], true))
+    @if ($order->isCancellable())
     <div class="card">
         <h2>Batalkan Order</h2>
         <form method="POST" action="{{ route('admin.orders.cancel', $order) }}">

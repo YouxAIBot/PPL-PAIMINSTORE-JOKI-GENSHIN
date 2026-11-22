@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\VaultCredential;
 use Illuminate\Database\Eloquent\Model;
 
 class OrderGameAccount extends Model
@@ -19,7 +20,7 @@ class OrderGameAccount extends Model
     protected function casts(): array
     {
         return [
-            'credential_encrypted' => 'encrypted',
+            'credential_encrypted' => VaultCredential::class,
             'purge_at' => 'datetime',
         ];
     }

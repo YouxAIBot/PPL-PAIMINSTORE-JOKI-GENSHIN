@@ -6,7 +6,8 @@
     <table>
         <tr><th>UID</th><td>{{ $order->gameAccount->uid }}</td></tr>
         <tr><th>Server</th><td>{{ $order->gameAccount->server }}</td></tr>
-        <tr><th>Login game</th><td><strong>{{ $order->gameAccount->credential_encrypted }}</strong></td></tr>
+        <tr><th>Username / Email</th><td><strong>{{ $credential['username'] }}</strong></td></tr>
+        <tr><th>Password</th><td><strong>{{ $credential['password'] }}</strong></td></tr>
         @if ($order->gameAccount->attachment_url)
             <tr><th>Lampiran</th><td><a href="{{ $order->gameAccount->attachment_url }}" target="_blank">buka</a></td></tr>
         @endif

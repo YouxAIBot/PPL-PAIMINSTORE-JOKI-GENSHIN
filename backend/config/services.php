@@ -28,6 +28,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'credential' => [
+        // Kunci AES-256-GCM untuk kredensial akun game (terpisah dari APP_KEY).
+        'key' => env('CREDENTIAL_KEY'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

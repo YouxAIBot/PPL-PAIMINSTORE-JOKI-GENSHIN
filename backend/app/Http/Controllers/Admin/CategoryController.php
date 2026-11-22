@@ -7,6 +7,7 @@ use App\Models\ActivityLog;
 use App\Models\JokiCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
@@ -62,7 +63,7 @@ class CategoryController extends Controller
     private function validateData(Request $request, ?JokiCategory $category = null): array
     {
         $rules = [
-            'name' => ['required', 'string', 'max:100', 'unique:joki_categories,name,'.$category?->id],
+            'name' => ['required', 'string', 'max:100', Rule::unique('joki_categories', 'name')->ignore($category?->id)],
             'description' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
         ];

@@ -20,6 +20,11 @@ class Order extends Model
         self::COMPLETED, self::CANCELLED, self::REFUNDED,
     ];
 
+    /** Status yang masih boleh dibatalkan admin. */
+    public const CANCELLABLE = [
+        self::PENDING_PAYMENT, self::PAID, self::QUEUED, self::IN_PROGRESS,
+    ];
+
     protected $fillable = [
         'order_no', 'user_id', 'package_id', 'booster_id', 'status',
         'price_snapshot', 'total_amount', 'est_hours_snapshot', 'queue_priority',
@@ -65,6 +70,11 @@ class Order extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class);
+    }
+
+    public function isCancellable(): bool
+    {
+        return in_array($this->status, self::CANCELLABLE, true);
     }
 
     public function scopeStatus(Builder $query, ?string $status): Builder
