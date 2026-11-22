@@ -6,6 +6,7 @@ import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/catalog/presentation/home_screen.dart';
 import '../../features/catalog/presentation/package_detail_screen.dart';
 import '../../features/catalog/presentation/package_list_screen.dart';
+import '../../features/order/presentation/order_form_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -31,11 +32,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/order/new/:packageId',
+        builder: (_, s) => OrderFormScreen(
+          packageId: int.parse(s.pathParameters['packageId']!),
+        ),
+      ),
+      GoRoute(
+        path: '/orders/:no/pay',
         builder: (_, s) => Scaffold(
-          appBar: AppBar(title: const Text('Form Pesanan')),
-          body: Center(
-            child: Text('Form untuk paket ${s.pathParameters['packageId']} (Langkah 5)'),
-          ),
+          appBar: AppBar(title: const Text('Ringkasan Pembayaran')),
+          body: Center(child: Text('Pembayaran ${s.pathParameters['no']} (Langkah 6)')),
         ),
       ),
     ],
