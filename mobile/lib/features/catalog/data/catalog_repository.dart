@@ -1,3 +1,6 @@
+import 'package:dio/dio.dart';
+import '../../../core/network/api_error.dart';
+import '../../../core/network/dio_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'catalog_models.dart';
 
@@ -53,15 +56,29 @@ class FakeCatalogRepository implements CatalogRepository {
 }
 
 class ApiCatalogRepository implements CatalogRepository {
+  final Dio dio;
+  ApiCatalogRepository(this.dio);
+
   @override
-  Future<List<Category>> categories() => throw UnimplementedError();
+  Future<List<Category>> categories() => guard(() async {
+        final r = await dio.get('/categories');
+        return (r.data['data'] as List).map((e) => Category.fromJson(e)).toList();
+      });
+
   @override
-  Future<List<Package>> packages(String slug) => throw UnimplementedError();
+  Future<List<Package>> packages(String slug) => guard(() async {
+        final r = await dio.get('/categories/$slug/packages');
+        return (r.data['data'] as List).map((e) => Package.fromJson(e)).toList();
+      });
+
   @override
-  Future<Package> package(int id) => throw UnimplementedError();
+  Future<Package> package(int id) => guard(() async {
+        final r = await dio.get('/packages/$id');
+        return Package.fromJson(r.data['data']);
+      });
 }
 
 final catalogRepositoryProvider = Provider<CatalogRepository>((ref) {
   const useFake = bool.fromEnvironment('USE_FAKE', defaultValue: true);
-  return useFake ? FakeCatalogRepository() : ApiCatalogRepository();
+  return useFake ? FakeCatalogRepository() : ApiCatalogRepository(ref.read(dioProvider));
 });

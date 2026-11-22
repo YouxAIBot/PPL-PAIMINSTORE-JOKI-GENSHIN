@@ -1,3 +1,6 @@
+import 'package:dio/dio.dart';
+import '../../../core/network/api_error.dart';
+import '../../../core/network/dio_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../order/data/order_repository.dart';
 
@@ -38,18 +41,27 @@ class FakePaymentRepository implements PaymentRepository {
 }
 
 class ApiPaymentRepository implements PaymentRepository {
+  final Dio dio;
+  ApiPaymentRepository(this.dio);
+
   @override
-  Future<GatewayLink> createGateway(String orderNo) =>
-      throw UnimplementedError();
+  Future<GatewayLink> createGateway(String orderNo) => guard(() async {
+        final r = await dio.post('/orders/$orderNo/payments/gateway');
+        return GatewayLink.fromJson(r.data['data']);
+      });
+
   @override
-  Future<String> status(String orderNo) => throw UnimplementedError();
+  Future<String> status(String orderNo) => guard(() async {
+        final r = await dio.get('/orders/$orderNo/payment');
+        return r.data['data']['status'] as String;
+      });
 }
 
 final paymentRepositoryProvider = Provider<PaymentRepository>((ref) {
   const useFake = bool.fromEnvironment('USE_FAKE', defaultValue: true);
   return useFake
       ? FakePaymentRepository(ref.read(orderRepositoryProvider) as FakeOrderRepository)
-      : ApiPaymentRepository();
+      : ApiPaymentRepository(ref.read(dioProvider));
 });
 
 Future<bool> waitPaid(

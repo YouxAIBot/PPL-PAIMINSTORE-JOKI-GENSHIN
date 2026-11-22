@@ -13,6 +13,7 @@ class AppNavBar extends StatelessWidget {
         if (i == selected) return;
         if (i == 0) context.go('/home');
         if (i == 1) context.go('/orders');
+        if (i == 2) context.go('/profile');
       },
       destinations: const [
         NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Beranda'),

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/widgets/app_nav_bar.dart';
 import '../../../core/widgets/async_view.dart';
-import '../../auth/data/auth_repository.dart';
 import '../data/catalog_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -15,16 +14,6 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Paiminstore'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Keluar',
-            onPressed: () async {
-              await ref.read(authRepositoryProvider).logout();
-              if (context.mounted) context.go('/auth');
-            },
-          ),
-        ],
       ),
       bottomNavigationBar: const AppNavBar(selected: 0),
       body: AsyncView(

@@ -1,3 +1,6 @@
+import 'package:dio/dio.dart';
+import '../../../core/network/api_error.dart';
+import '../../../core/network/dio_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../catalog/data/catalog_repository.dart';
 
@@ -143,6 +146,9 @@ class FakeOrderRepository implements OrderRepository {
 }
 
 class ApiOrderRepository implements OrderRepository {
+  final Dio dio;
+  ApiOrderRepository(this.dio);
+
   @override
   Future<Order> create({
     required int packageId,
@@ -152,20 +158,45 @@ class ApiOrderRepository implements OrderRepository {
     required String password,
     String? notes,
   }) =>
-      throw UnimplementedError();
+      guard(() async {
+        final form = FormData.fromMap({
+          'package_id': packageId,
+          'uid': uid,
+          'server': server,
+          'game_username': username,
+          'game_password': password,
+          'accept_disclaimer': '1',
+          if (notes != null) 'notes': notes,
+        });
+        final r = await dio.post('/orders', data: form);
+        return Order.fromJson(r.data['data']);
+      });
+
   @override
-  Future<List<Order>> list({String? status}) => throw UnimplementedError();
+  Future<List<Order>> list({String? status}) => guard(() async {
+        final r = await dio.get('/orders',
+            queryParameters: {if (status != null) 'status': status});
+        return (r.data['data'] as List).map((e) => Order.fromJson(e)).toList();
+      });
+
   @override
-  Future<Order> detail(String orderNo) => throw UnimplementedError();
+  Future<Order> detail(String orderNo) => guard(() async {
+        final r = await dio.get('/orders/$orderNo');
+        return Order.fromJson(r.data['data']);
+      });
+
   @override
-  Future<QueueInfo> queue(String orderNo) => throw UnimplementedError();
+  Future<QueueInfo> queue(String orderNo) => guard(() async {
+        final r = await dio.get('/orders/$orderNo/queue');
+        return QueueInfo.fromJson(r.data['data']);
+      });
 }
 
 final orderRepositoryProvider = Provider<OrderRepository>((ref) {
   const useFake = bool.fromEnvironment('USE_FAKE', defaultValue: true);
   return useFake
       ? FakeOrderRepository(ref.read(catalogRepositoryProvider))
-      : ApiOrderRepository();
+      : ApiOrderRepository(ref.read(dioProvider));
 });
 
 final orderDetailProvider =
