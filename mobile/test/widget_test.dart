@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paiminstore_mobile/core/format.dart';
+import 'package:paiminstore_mobile/features/catalog/data/catalog_repository.dart';
 
 void main() {
   test('rupiah memakai pemisah titik', () {
@@ -9,5 +10,18 @@ void main() {
   test('estimasi jam dan hari', () {
     expect(estimasi(12), 'Est. 12 jam');
     expect(estimasi(60), 'Est. ±3 hari');
+  });
+
+  test('repository tiruan memuat paket dari kategori', () async {
+    final repo = FakeCatalogRepository();
+    final pkgs = await repo.packages('joki-explore-map');
+    expect(pkgs.length, 8);
+    expect(pkgs.first.name, 'Mondstadt 100%');
+  });
+
+  test('detail paket Fontaine memiliki harga 175000', () async {
+    final p = await FakeCatalogRepository().package(5);
+    expect(p.name, 'Fontaine 100%');
+    expect(p.price, 175000);
   });
 }
