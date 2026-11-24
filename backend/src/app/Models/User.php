@@ -106,8 +106,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         }
     }
 
+    /**
+     * Hanya admin berstatus aktif yang boleh masuk panel admin.
+     */
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        return $this->role === UserRole::Admin && $this->status === UserStatus::Active;
     }
 }
