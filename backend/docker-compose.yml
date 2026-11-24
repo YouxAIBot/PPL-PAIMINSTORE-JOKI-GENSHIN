@@ -1,0 +1,48 @@
+services:
+  php:
+    build:
+      context: ./php
+    container_name: ${COMPOSE_PROJECT_NAME}_php
+    # Teruskan variabel PROJECT_NAME ke dalam kontainer
+    environment:
+      - PROJECT_NAME=${PROJECT_NAME}
+      - XDEBUG=${XDEBUG:-false}
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+  nginx:
+    build:
+      context: ./nginx
+    container_name: ${COMPOSE_PROJECT_NAME}_nginx
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - php
+  db:
+    image: postgres:16-alpine
+    container_name: ${COMPOSE_PROJECT_NAME}_db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q -d ${PROJECT_NAME} -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "15432:5432"
+    environment:
+      # Database ini dibuat saat kontainer pertama kali dijalankan
+      POSTGRES_DB: ${PROJECT_NAME}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
