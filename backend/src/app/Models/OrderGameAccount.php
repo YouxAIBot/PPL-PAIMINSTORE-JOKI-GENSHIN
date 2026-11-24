@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\VaultCredential;
 use App\Enums\GameServer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,6 +39,7 @@ class OrderGameAccount extends Model
     {
         return [
             'server' => GameServer::class,
+            'credential_encrypted' => VaultCredential::class,
             'purge_at' => 'datetime',
         ];
     }

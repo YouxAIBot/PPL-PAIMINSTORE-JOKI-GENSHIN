@@ -10,7 +10,7 @@ enum GameServer: string
     case Asia = 'asia';
     case America = 'america';
     case Europe = 'europe';
-    case TwHkMo = 'tw_hk_mo';
+    case TwHkMo = 'twhkmo';
 
     public function label(): string
     {

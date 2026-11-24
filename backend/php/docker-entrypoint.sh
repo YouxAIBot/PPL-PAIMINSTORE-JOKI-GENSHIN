@@ -88,6 +88,11 @@ AWS_BUCKET=
 AWS_USE_PATH_STYLE_ENDPOINT=false
 
 VITE_APP_NAME="${APP_NAME}"
+
+CREDENTIAL_KEY=
+MIDTRANS_SERVER_KEY=
+MIDTRANS_CLIENT_KEY=
+MIDTRANS_IS_PRODUCTION=false
 EOF
 else
   echo "📄 .env file already exists, keeping the existing .env (tidak ditimpa)..."
@@ -194,6 +199,12 @@ echo "✅ Database is ready!"
 if [ ! -d /var/www/html/vendor ]; then
   echo "📦 Installing composer dependencies..."
   composer install --no-interaction --prefer-dist --optimize-autoloader
+fi
+
+# Step 4b: Pasang Laravel Sanctum jika belum ada di vendor (composer.lock diperbarui sekali, lalu di-commit)
+if [ ! -d /var/www/html/vendor/laravel/sanctum ]; then
+  echo "🔑 Memasang Laravel Sanctum..."
+  composer update laravel/sanctum --no-interaction --prefer-dist --optimize-autoloader || echo "⚠️ Gagal memasang Sanctum. Jalankan manual: composer update laravel/sanctum"
 fi
 
 # Step 5: Generate app key if it is not set yet (jangan dirotasi tiap start)

@@ -35,6 +35,10 @@ return [
         ],
     ],
 
+    'credential' => [
+        'key' => env('CREDENTIAL_KEY'),
+    ],
+
     'midtrans' => [
         'server_key' => env('MIDTRANS_SERVER_KEY'),
         'client_key' => env('MIDTRANS_CLIENT_KEY'),

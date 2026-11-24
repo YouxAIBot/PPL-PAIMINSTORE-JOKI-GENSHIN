@@ -13,7 +13,7 @@ return new class extends Migration
             $table->unsignedBigInteger('order_id')->primary();
             $table->foreign('order_id')->references('id')->on('orders');
             $table->string('uid');
-            $table->enum('server', ['asia', 'america', 'europe', 'tw_hk_mo']);
+            $table->enum('server', ['asia', 'america', 'europe', 'twhkmo']);
             // Diisi terenkripsi AES-256-GCM, tidak pernah dikirim balik lewat API
             $table->binary('credential_encrypted');
             $table->string('attachment_url')->nullable();

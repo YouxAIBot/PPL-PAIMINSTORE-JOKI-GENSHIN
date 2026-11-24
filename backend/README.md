@@ -1,131 +1,139 @@
-# Paiminstore Joki Genshin
+# Backend Paiminstore Joki Genshin
 
-Pintu masuk tim ke seluruh berkas analisis dan perancangan. Mulai dari sini untuk tahu dokumen mana yang dipakai, istilah apa yang disepakati, dan apa yang sudah selesai.
+Laravel 12 + Filament (panel admin) + PostgreSQL, berjalan di Docker. Kode Laravel ada di `src/`. Semua perintah dijalankan dari folder `backend/` di PowerShell.
 
-## Tentang proyek
+## Servis Docker
 
-Paiminstore Joki Genshin adalah aplikasi jasa joki (boosting) Genshin Impact. Pengguna memesan dan membayar lewat aplikasi Android. Admin dan booster mengelola order lewat panel web.
-
-- Mata kuliah: CIE515 Pengembangan Perangkat Lunak (dosen: Qori Halimatul Hidayah)
-- Metode: RUP versi sederhana
-- Wawancara dan analisis masalah sampai minggu 6, pengumpulan akhir di minggu 14
-
-## Teknologi dan peran
-
-| Bagian | Teknologi |
-| --- | --- |
-| Aplikasi pengguna | Flutter (Android Studio) |
-| Admin panel | Laravel, berjalan di Docker |
-| Database | PostgreSQL |
-| Cache | Redis |
-| Pembayaran | Midtrans (Snap) |
-| Notifikasi | Firebase Cloud Messaging (FCM) |
-| Chat real-time | Laravel Reverb |
-
-| Peran | Akses | Fungsi |
+| Servis | Fungsi | Port di laptop |
 | --- | --- | --- |
-| Pengguna | Aplikasi Android | Memesan joki, membayar, memantau antrian, chat, memberi review |
-| Admin / Owner | Panel web | Kelola katalog, verifikasi pembayaran, tugaskan booster, balas chat, lihat laporan |
-| Booster | Panel web | Mengerjakan order yang ditugaskan dan menyelesaikannya |
+| `php` | PHP-FPM, tempat semua perintah `artisan` dan `composer` dijalankan | - |
+| `nginx` | Web server | 80 dan 443 (https, panel admin), 8000 (http, API untuk Mobile). Bisa diganti lewat `.env` |
+| `db` | PostgreSQL 16 | 15432 (bisa diganti lewat `.env`) |
 
-## Daftar dokumen dan file
+## Pertama kali
 
-BRD adalah sumber utama kebutuhan. Dokumen lain harus konsisten dengan BRD.
+1. Salin pengaturan Docker:
 
-### Dokumen online
-
-| Dokumen | Isi |
-| --- | --- |
-| [BRD](https://claude.ai/artifact/1uYSjFLnqMr1Fh71iywmhY) | Kebutuhan bisnis, kebutuhan fungsional dan nonfungsional, aturan bisnis, metode RUP |
-| [Perancangan Aplikasi](https://claude.ai/artifact/Kgt1XNa9f8whAWbb8TqDpx) | Analisis awal, ERD, DDL, sitemap, alur pengguna, asumsi |
-| [Lembar Tugas PPL](https://claude.ai/artifact/Bb3eU5SBonCZbC69h1hUyP) | Gap analysis, lembar analisis kebutuhan (Sesi 6), model FSD (Sesi 7) |
-
-### Diagram (file draw.io)
-
-| File | Isi |
-| --- | --- |
-| `dfd-level0-context.drawio` | DFD Level 0 (context diagram) |
-| `dfd-level1.drawio` | DFD Level 1, 8 proses |
-| `dfd-level2-1-autentikasi.drawio` sampai `dfd-level2-8-konten.drawio` | DFD Level 2, satu file per proses 1.0 sampai 8.0 |
-| `erd-paiminstore.drawio` | ERD 10 tabel, notasi crow's foot |
-| `usecase-paiminstore.drawio` | Use case diagram |
-| `flowchart-activity-paiminstore.drawio` | Diagram alir (activity diagram berlajur) |
-| `class-diagram-paiminstore.drawio` | Class diagram |
-| `sequence-order-paiminstore.drawio` | Sequence diagram order |
-| `sequence-pembayaran-paiminstore.drawio` | Sequence diagram pembayaran |
-| `gantt-paiminstore.drawio` | Jadwal pengerjaan (Gantt) |
-
-## Cara membuka file draw.io
-
-1. Buka [app.diagrams.net](https://app.diagrams.net), lalu pilih File, Open from, Device. Atau pasang ekstensi draw.io di VS Code dan buka file `.drawio` langsung.
-2. Pilih file `.drawio` dari folder diagram.
-3. Untuk ekspor: File, Export as, lalu pilih PNG atau PDF untuk slide dan laporan.
-
-Susunan folder yang disarankan:
-
-```text
-docs/
-  README.md
-  diagram/
-    dfd/     (10 file DFD)
-    erd/     (erd-paiminstore.drawio)
-    uml/     (use case, activity, class, sequence)
-    gantt/
+```powershell
+copy .env.example .env
 ```
 
-Garis di DFD dan ERD sengaja dibuat siku-siku. Saat menggeser kotak di draw.io, garisnya ikut, tetapi bisa perlu dirapikan lagi.
+2. Jalankan container (pertama kali agak lama karena `composer install`):
 
-## Istilah baku
+```powershell
+docker compose up -d --build
+docker compose logs -f php
+```
 
-Pakai istilah ini di semua dokumen, diagram, dan kode supaya tidak berbeda antaranggota.
+Tunggu sampai log berhenti dan tidak ada error, lalu tekan `Ctrl+C` (container tetap jalan).
 
-| Istilah | Arti | Jangan dipakai |
-| --- | --- | --- |
-| Pengguna | Orang yang memesan joki lewat aplikasi | Pelanggan, customer |
-| Booster | Orang yang mengerjakan order | Worker, joki |
-| Admin / Owner | Pengelola panel dan pemilik usaha | - |
-| Order | Satu pesanan joki, bernomor `order_no` (juga nomor invoice) | - |
-| Paket | Jenis joki yang dijual, ada di dalam kategori | - |
-| Antrian | Order berstatus `queued`, urut menurut prioritas lalu waktu bayar | - |
+3. Isi kunci di `src/.env` (file ini tidak boleh di-commit):
 
-| Objek | Nilai status |
+```powershell
+docker compose exec php php -r "echo 'base64:'.base64_encode(random_bytes(32)).PHP_EOL;"
+```
+
+Tempel hasilnya sebagai `CREDENTIAL_KEY=...` di `src/.env`. Isi juga `MIDTRANS_SERVER_KEY` dan `MIDTRANS_CLIENT_KEY` dari akun Sandbox tim. Setelah mengubah `.env`:
+
+```powershell
+docker compose exec php php artisan config:clear
+```
+
+4. Buat tabel dan data awal:
+
+```powershell
+docker compose exec php php artisan migrate:fresh --seed
+```
+
+Kalau ada port yang sudah dipakai program lain (error `port is already allocated`), ganti di `backend/.env` lalu jalankan `docker compose up -d` lagi:
+
+```text
+HTTP_PORT=8080
+HTTPS_PORT=8443
+API_PORT=8001
+DB_PORT=15433
+```
+
+Kalau `API_PORT` diganti, jalankan Mobile dengan `--dart-define=API_URL=http://10.0.2.2:<port>/api/v1`.
+
+## Setelah menarik perubahan (git pull)
+
+Kalau ada paket baru di `src/composer.json`:
+
+```powershell
+docker compose exec php composer install
+```
+
+Khusus penarikan pertama yang menambahkan Laravel Sanctum, `composer.lock` perlu diperbarui sekali, lalu di-commit. Ini juga dikerjakan otomatis saat container `php` dimulai ulang (`docker compose restart php`), jadi cukup cek `git status` dan commit `src/composer.lock`. Cara manual:
+
+```powershell
+docker compose exec php composer update laravel/sanctum
+```
+
+Kalau ada migrasi baru: `docker compose exec php php artisan migrate`.
+
+## Akses
+
+| Apa | Alamat |
 | --- | --- |
-| Order | `pending_payment`, `queued`, `in_progress`, `completed`, `cancelled` |
-| Payment | `pending`, `paid`, `failed`, `refunded` |
-| Metode bayar | `gateway`, `manual` |
+| Panel admin | https://beckend.test/admin |
+| API untuk Mobile (emulator Android) | http://10.0.2.2:8000/api/v1 |
+| API dari laptop | http://localhost:8000/api/v1 |
+| Database | `localhost:15432`, nama `beckend`, user `postgres`, password `secret` |
 
-## Metode dan jadwal
+Panel admin memakai alamat `beckend.test`. Tambahkan baris ini di `C:\Windows\System32\drivers\etc\hosts` (Notepad dibuka sebagai Administrator):
 
-Proyek memakai RUP versi sederhana. Rincian fase dan alasan memilihnya ada di bagian 12 BRD, dan jadwal per minggu ada di `gantt-paiminstore.drawio`.
+```text
+127.0.0.1 beckend.test
+```
 
-| Fase RUP | Isi pekerjaan |
+Browser akan memperingatkan sertifikat karena dibuat sendiri. Pilih lanjutkan.
+
+## Akun dari seeder
+
+Semua password `password`. Ganti sebelum dipakai di luar laptop sendiri.
+
+| Email | Peran |
 | --- | --- |
-| Inception | Wawancara, analisis masalah dan kebutuhan, BRD, gap analysis |
-| Elaboration | Model analisis dan desain: DFD, ERD, UML, rancangan arsitektur |
-| Construction | Pengembangan bertahap dalam 3 iterasi, prioritas Tinggi lebih dulu |
-| Transition | Pengujian penerimaan (UAT), perbaikan, serah terima |
+| `admin@admin.com` | admin (super_admin) |
+| `user@admin.com` | customer |
+| `booster1@paiminstore.test`, `booster2@paiminstore.test` | booster |
 
-- Minggu 5: mulai mendokumentasikan masalah yang dialami stakeholder
-- Sampai minggu 6: wawancara dan analisis masalah dan kebutuhan selesai
-- Minggu 14: batas akhir pengumpulan
+Seeder katalog berisi 3 kategori dan 10 paket yang sama dengan data tiruan di aplikasi Mobile. Seeder aman dijalankan berulang.
 
-## Aturan kerja dan status dokumen
+## Endpoint API v1
 
-Aturan ini usulan awal; tim boleh mengubahnya.
+Semua jawaban JSON. Bentuk data: `{"data": ...}`. Kesalahan validasi: 422 dengan `message` dan `errors`. Harga selalu integer rupiah.
 
-1. Kebutuhan berubah: ubah BRD lebih dulu, lalu sesuaikan diagram yang terkait.
-2. Skema database berubah: perbarui DDL, ERD, dan class diagram sekaligus.
-3. Pakai istilah baku di atas, dan kode kebutuhan (FU, FS, NF, AB) tidak diganti setelah dipakai.
-4. Beri tahu tim sebelum mengubah dokumen yang dipakai bersama.
+| Metode | Path | Auth | Fungsi |
+| --- | --- | --- | --- |
+| POST | `/auth/register` | - | Daftar (name, email, password, password_confirmation) |
+| POST | `/auth/login` | - | Login, dijawab `data.token` dan `data.user` |
+| POST | `/auth/logout` | Bearer | Cabut token yang dipakai |
+| GET | `/me` | Bearer | Profil |
+| PATCH | `/me` | Bearer | Ubah name dan email |
+| PUT | `/me/password` | Bearer | Ganti password (current_password, password, password_confirmation) |
+| GET | `/categories` | Bearer | Kategori aktif |
+| GET | `/categories/{slug}/packages` | Bearer | Paket aktif dalam kategori |
+| GET | `/packages/{id}` | Bearer | Detail paket |
+| POST | `/payments/midtrans/webhook` | signature | Notifikasi Midtrans |
 
-| Dokumen | Status | Catatan |
-| --- | --- | --- |
-| BRD | Draf lengkap | Bagian 12 memuat metode RUP |
-| Perancangan aplikasi (ERD, DDL) | Selesai | ERD juga tersedia sebagai file draw.io |
-| DFD Level 0 sampai 2 | Selesai | Level 1 dan Level 2 proses 1.0 sudah disederhanakan |
-| ERD draw.io | Selesai | 10 tabel, 14 relasi |
-| UML (use case, activity, class, sequence) | Selesai | Istilah aktor sudah disamakan |
-| Gantt | Selesai | Belum dimasukkan ke BRD |
-| Gap analysis, Sesi 6, Sesi 7 | Selesai | Gap analysis direvisi |
-| Konfirmasi As-Is dengan owner | Selesai | Disetujui owner |
-| Sequence diagram chat | Belum | Opsional |
+Belum ada: `/orders`, `/orders/{no}`, `/orders/{no}/queue`, `/orders/{no}/payments/gateway`, `/orders/{no}/payment`. Pengguna berstatus `banned` ditolak di login dan di setiap permintaan (token dicabut).
+
+Pembayaran: URL selesai Midtrans harus mengandung `/payment/finish` (gagal: `/payment/error`) karena aplikasi Mobile membaca URL itu.
+
+## Test
+
+```powershell
+docker compose exec php php artisan test
+```
+
+## Masalah umum
+
+| Gejala | Penyebab dan jalan keluar |
+| --- | --- |
+| `laravel.log could not be opened ... Permission denied` | File dibuat oleh root. Jalankan `docker compose restart php` (izin diperbaiki saat start). Untuk perintah yang menulis file, pakai `docker compose exec -u www-data php ...` |
+| Port 80, 443, atau 8000 sudah dipakai | Hentikan program lain yang memakainya (misalnya IIS atau Laragon), lalu `docker compose up -d` lagi |
+| `Class "Laravel\Sanctum\HasApiTokens" not found` | Jalankan `docker compose exec php composer update laravel/sanctum` |
+| `Order API: CREDENTIAL_KEY belum diset` | Isi `CREDENTIAL_KEY` di `src/.env`, lalu `config:clear` |
+| Mobile gagal konek | Pastikan `docker compose ps` menunjukkan `nginx` Running dan buka `http://localhost:8000/up` |
