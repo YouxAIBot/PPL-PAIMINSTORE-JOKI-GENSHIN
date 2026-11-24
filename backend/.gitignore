@@ -8,3 +8,10 @@ src/node_modules/
 # Environment files
 .env
 src/.env
+
+# Sisa setup Sail lama di luar src (tidak dipakai lagi)
+/vendor/
+/storage/
+/bootstrap/
+/database/
+.phpunit.result.cache
